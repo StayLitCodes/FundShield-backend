@@ -3,7 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
+import { BullModule } from '@nestjs/bull';
 import { HealthController } from './controllers/health.controller';
+import { BlockchainModule } from './blockchain/blockchain.module';
 import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
@@ -22,6 +24,14 @@ import { validationSchema } from './config/validation.config';
       useFactory: databaseConfig,
     }),
 
+    // Redis/Bull Queue
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT) || 6379,
+      },
+    }),
+
     // Rate limiting
     ThrottlerModule.forRoot([
       {
@@ -34,6 +44,9 @@ import { validationSchema } from './config/validation.config';
     WinstonModule.forRoot({
       instance: createLogger(),
     }),
+
+    // Blockchain module
+    BlockchainModule,
   ],
   controllers: [HealthController],
   providers: [],
