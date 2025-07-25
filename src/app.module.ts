@@ -9,6 +9,9 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
+import { AuditModule } from './audit/audit.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditInterceptor } from './audit/audit.interceptor';
 
 @Module({
   imports: [
@@ -47,8 +50,14 @@ import { validationSchema } from './config/validation.config';
 
     // Blockchain module
     BlockchainModule,
+    AuditModule,
   ],
   controllers: [HealthController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
+  ],
 })
 export class AppModule {}
