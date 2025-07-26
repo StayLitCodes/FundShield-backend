@@ -1,0 +1,16 @@
+export enum AuditAction {
+  CREATED = "created",
+  UPDATED = "updated",
+  STATUS_CHANGED = "status_changed",
+  FUNDED = "funded",
+  MILESTONE_COMPLETED = "milestone_completed",
+  FUNDS_RELEASED = "funds_released",
+  CANCELLED = "cancelled",
+  DISPUTED = "disputed",
+  RESOLVED = "resolved",
+  PARTICIPANT_ADDED = "participant_added",
+  PARTICIPANT_REMOVED = "participant_removed",
+  CONDITION_EVALUATED = "condition_evaluated",
+  SMART_CONTRACT_DEPLOYED = "smart_contract_deployed",
+  SMART_CONTRACT_EXECUTED = "smart_contract_executed",
+}
