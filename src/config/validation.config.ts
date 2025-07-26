@@ -18,7 +18,13 @@ export const validationSchema = Joi.object({
   
   // JWT
   JWT_SECRET: Joi.string().required(),
-  JWT_EXPIRES_IN: Joi.string().default('24h'),
+  JWT_EXPIRES_IN: Joi.string().default('1h'),
+  JWT_REFRESH_SECRET: Joi.string().required(),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_REFRESH_EXPIRES_IN_LONG: Joi.string().default('30d'),
+  
+  // Frontend URL for email links
+  FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
   
   // Starknet
   STARKNET_NETWORK: Joi.string().valid('mainnet', 'testnet').default('testnet'),
