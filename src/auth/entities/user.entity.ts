@@ -7,9 +7,15 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
+  OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
+import { UserProfile } from '../../user/entities/user-profile.entity';
+import { UserKyc } from '../../user/entities/user-kyc.entity';
+import { UserPreference } from '../../user/entities/user-preference.entity';
+import { UserActivity } from '../../user/entities/user-activity.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -110,6 +116,33 @@ export class User {
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any>;
+
+  @OneToOne(() => UserProfile, profile => profile.user, { cascade: true })
+  profile: UserProfile;
+
+  @OneToOne(() => UserKyc, kyc => kyc.user, { cascade: true })
+  kyc: UserKyc;
+
+  @OneToOne(() => UserPreference, preference => preference.user, { cascade: true })
+  preference: UserPreference;
+
+  @OneToMany(() => UserActivity, activity => activity.user, { cascade: true })
+  activities: UserActivity[];
+
+  @Column({ default: false })
+  isSuspended: boolean;
+
+  @Column({ nullable: true })
+  suspendedAt: Date;
+
+  @Column({ nullable: true })
+  suspensionReason: string;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

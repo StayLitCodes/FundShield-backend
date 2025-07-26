@@ -7,11 +7,13 @@ import compression from 'compression';
 import { AppModule } from './app.module';
 import { WinstonModule } from 'nest-winston';
 import { createLogger } from './config/logger.config';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   const logger = createLogger();
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger({
       instance: logger,
     }),
@@ -63,6 +65,8 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
   }
+
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads/' });
 
   await app.listen(port);
   logger.info(`🚀 FundShield Backend running on port ${port}`);
