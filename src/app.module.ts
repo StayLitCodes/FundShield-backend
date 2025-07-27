@@ -6,6 +6,7 @@ import { WinstonModule } from 'nest-winston';
 import { BullModule } from '@nestjs/bull';
 import { HealthController } from './controllers/health.controller';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { AuthModule } from './auth/auth.module';
 import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
@@ -51,6 +52,7 @@ import { AuditInterceptor } from './audit/audit.interceptor';
     // Blockchain module
     BlockchainModule,
     AuditModule,
+    AuthModule,
   ],
   controllers: [HealthController],
   providers: [
