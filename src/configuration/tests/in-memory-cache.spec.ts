@@ -47,8 +47,29 @@ describe('InMemoryCache', () => {
     expect(cache.cache.size).toBe(0);
   });
 
-  it('should return undefined for missing keys', () => {
-    expect(cache.get('missing')).toBeUndefined();
+
+  it('should handle falsy values', () => {
+    cache.set('zero', 0);
+    cache.set('empty', '');
+    cache.set('null', null);
+    expect(cache.get('zero')).toBe(0);
+    expect(cache.get('empty')).toBe('');
+    expect(cache.get('null')).toBeNull();
+  });
+
+  it('should handle a large number of keys', () => {
+    for (let i = 0; i < 1000; i++) {
+      cache.set(`key${i}`, i);
+    }
+    expect(cache.get('key500')).toBe(500);
+    expect(cache.has('key999')).toBe(true);
+    cache.clear();
+    expect(cache.has('key500')).toBe(false);
+  });
+
+  it('delete should return undefined for missing keys', () => {
+    expect(() => cache.delete('notfound')).not.toThrow();
+    expect(cache.get('notfound')).toBeUndefined();
   });
 
   it('should delete values', () => {
