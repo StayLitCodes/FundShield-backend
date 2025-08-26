@@ -12,6 +12,7 @@ import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
 import { AuditModule } from './audit/audit.module';
+import { DatabaseModule } from './database/database.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
 
@@ -51,10 +52,11 @@ import { AuditInterceptor } from './audit/audit.interceptor';
     }),
 
     // Modules
-    BlockchainModule,
-    AuditModule,
-    AuthModule,
-    CryptoModule,
+  DatabaseModule,
+  BlockchainModule,
+  AuditModule,
+  AuthModule,
+  CryptoModule,
   ],
   controllers: [HealthController],
   providers: [
