@@ -5,13 +5,15 @@ import { PerformanceMetricsService } from '../monitoring/performance-metrics.ser
 export class MonitoringController {
   constructor(private readonly metricsService: PerformanceMetricsService) {}
 
+
   @Get('metrics')
-  getMetrics() {
-    return this.metricsService.getStats();
+  getMetrics(route?: string) {
+    return this.metricsService.getStats(route);
   }
 
+
   @Get('recent-requests')
-  getRecentRequests(): any {
-    return this.metricsService.getRecentRequests();
+  getRecentRequests(limit?: number, route?: string): any {
+    return this.metricsService.getRecentRequests(limit, route);
   }
 }

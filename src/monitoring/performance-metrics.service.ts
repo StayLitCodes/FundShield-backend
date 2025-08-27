@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-interface RequestMetrics {
+export interface RequestMetrics {
   route: string;
   durationMs: number;
   memoryUsage: NodeJS.MemoryUsage;
   cpuUsage: NodeJS.CpuUsage;
+  user?: string | number | null;
+  ip?: string | null;
 }
 
 @Injectable()
@@ -19,16 +21,23 @@ export class PerformanceMetricsService {
     }
   }
 
-  getRecentRequests(limit = 100) {
-    return this.requests.slice(-limit);
+
+  getRecentRequests(limit = 100, route?: string) {
+    let reqs = this.requests;
+    if (route) reqs = reqs.filter(r => r.route === route);
+    return reqs.slice(-limit);
   }
 
-  getStats() {
-    // Aggregate stats for dashboard
-    const total = this.requests.length;
-    const avg = total
-      ? this.requests.reduce((sum, r) => sum + r.durationMs, 0) / total
-      : 0;
-    return { total, avg }; 
+  getStats(route?: string) {
+    let reqs = this.requests;
+    if (route) reqs = reqs.filter(r => r.route === route);
+    const total = reqs.length;
+    if (!total) return { total: 0, avg: 0, median: 0, p95: 0, slowest: 0 };
+    const durations = reqs.map(r => r.durationMs).sort((a, b) => a - b);
+    const avg = durations.reduce((sum, d) => sum + d, 0) / total;
+    const median = durations[Math.floor(total / 2)];
+    const p95 = durations[Math.floor(total * 0.95)];
+    const slowest = durations[total - 1];
+    return { total, avg, median, p95, slowest };
   }
 }

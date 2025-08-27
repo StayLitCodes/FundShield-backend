@@ -15,7 +15,9 @@ export class PerformanceInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const now = process.hrtime.bigint();
     const req = context.switchToHttp().getRequest();
-    const route = req?.route?.path || req?.url;
+  const route = req?.route?.path || req?.url;
+  const user = req?.user?.id || null;
+  const ip = req?.ip || req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress;
     return next.handle().pipe(
       tap(() => {
         const end = process.hrtime.bigint();
@@ -27,6 +29,8 @@ export class PerformanceInterceptor implements NestInterceptor {
           durationMs,
           memoryUsage,
           cpuUsage,
+          user,
+          ip,
         });
       }),
     );
