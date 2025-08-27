@@ -1,5 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
+
+export interface Alert {
+  type: 'slow-request' | 'high-memory' | 'high-cpu' | 'cache-miss';
+  message: string;
+  timestamp: number;
+  data?: any;
+}
+
 export interface RequestMetrics {
   route: string;
   durationMs: number;
@@ -13,12 +21,68 @@ export interface RequestMetrics {
 export class PerformanceMetricsService {
   private requests: RequestMetrics[] = [];
 
+  private alerts: Alert[] = [];
+  private cacheHits = 0;
+  private cacheMisses = 0;
+
   recordRequest(metrics: RequestMetrics) {
     this.requests.push(metrics);
     // Optionally, aggregate or log slow requests
     if (metrics.durationMs > 1000) {
-      console.warn(`[Performance] Slow request: ${metrics.route} - ${metrics.durationMs}ms`);
+      const alert: Alert = {
+        type: 'slow-request',
+        message: `[Performance] Slow request: ${metrics.route} - ${metrics.durationMs}ms`,
+        timestamp: Date.now(),
+        data: metrics,
+      };
+      this.alerts.push(alert);
+      console.warn(alert.message);
     }
+    if (metrics.memoryUsage.heapUsed / metrics.memoryUsage.heapTotal > 0.8) {
+      const alert: Alert = {
+        type: 'high-memory',
+        message: `[Performance] High memory usage: ${(metrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+        timestamp: Date.now(),
+        data: metrics.memoryUsage,
+      };
+      this.alerts.push(alert);
+      console.warn(alert.message);
+    }
+    if ((metrics.cpuUsage.user + metrics.cpuUsage.system) > 1e6) {
+      const alert: Alert = {
+        type: 'high-cpu',
+        message: `[Performance] High CPU usage: ${metrics.cpuUsage.user + metrics.cpuUsage.system}`,
+        timestamp: Date.now(),
+        data: metrics.cpuUsage,
+      };
+      this.alerts.push(alert);
+      console.warn(alert.message);
+    }
+  }
+  recordCacheHit() {
+    this.cacheHits++;
+  }
+
+  recordCacheMiss() {
+    this.cacheMisses++;
+    this.alerts.push({
+      type: 'cache-miss',
+      message: '[Cache] Cache miss detected',
+      timestamp: Date.now(),
+    });
+  }
+
+  getCacheStats() {
+    const total = this.cacheHits + this.cacheMisses;
+    return {
+      hits: this.cacheHits,
+      misses: this.cacheMisses,
+      hitRate: total ? this.cacheHits / total : 0,
+    };
+  }
+
+  getAlerts(limit = 50) {
+    return this.alerts.slice(-limit);
   }
 
 
