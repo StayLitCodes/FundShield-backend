@@ -7,14 +7,18 @@ async function seed() {
   
   try {
     const app = await NestFactory.createApplicationContext(AppModule);
-    
+
     logger.log('🌱 Starting database seeding...');
-    
-    // Add your seeding logic here
-    // Example: await userService.createDefaultUsers();
-    
+
+    const seeder = app.get('DatabaseSeeder') as any;
+    if (seeder && typeof seeder.seed === 'function') {
+      await seeder.seed();
+    } else {
+      logger.warn('No DatabaseSeeder found — skipping seeds');
+    }
+
     logger.log('✅ Database seeding completed successfully');
-    
+
     await app.close();
   } catch (error) {
     logger.error('❌ Database seeding failed:', error);
