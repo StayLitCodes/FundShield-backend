@@ -6,12 +6,16 @@ import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 // Controllers
 import { ApiGatewayController } from './controllers/api-gateway.controller';
 import { VersioningController } from './controllers/versioning.controller';
+import { DashboardController } from './controllers/dashboard.controller';
 
 // Services
 import { ApiGatewayService } from './services/api-gateway.service';
 import { VersioningService } from './services/versioning.service';
 import { RouteService } from './services/route.service';
 import { TransformationService } from './services/transformation.service';
+import { DashboardService } from './services/dashboard.service';
+import { SwaggerConfigService } from './services/swagger-config.service';
+import { AnalyticsIntegrationService } from './services/analytics-integration.service';
 // Guards
 import { ApiVersionGuard } from './guards/api-version.guard';
 import { AdvancedRateLimitGuard } from './guards/advanced-rate-limit.guard';
@@ -49,13 +53,20 @@ import { apiGatewayConfig } from './config/api-gateway.config';
       },
     ]),
   ],
-  controllers: [ApiGatewayController, VersioningController],
+  controllers: [
+    ApiGatewayController,
+    VersioningController,
+    DashboardController,
+  ],
   providers: [
     // Services
     ApiGatewayService,
     VersioningService,
     RouteService,
     TransformationService,
+    DashboardService,
+    SwaggerConfigService,
+    AnalyticsIntegrationService,
 
     // Guards
     {
@@ -96,6 +107,9 @@ import { apiGatewayConfig } from './config/api-gateway.config';
     VersioningService,
     RouteService,
     TransformationService,
+    DashboardService,
+    SwaggerConfigService,
+    AnalyticsIntegrationService,
     ResponseTransformInterceptor,
     ApiAnalyticsInterceptor,
     SecurityHeadersInterceptor,
