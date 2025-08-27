@@ -60,10 +60,8 @@ describe('Rate Limiting Verification Tests', () => {
 
   afterEach(async () => {
     // Reset rate limit counters between tests
-    if (rateLimitGuard && rateLimitGuard.clearAllLimits) {
-      rateLimitGuard.clearAllLimits();
-    }
-    
+    // Note: clearAllLimits method not available in current guard implementation
+
     // Wait a bit to ensure rate limit windows reset
     await new Promise(resolve => setTimeout(resolve, 1000));
   });
@@ -73,7 +71,7 @@ describe('Rate Limiting Verification Tests', () => {
       const endpoint = '/api/gateway/health';
       const maxRequests = 100; // Assuming default rate limit
       const responses: request.Response[] = [];
-      
+
       // Make requests rapidly
       for (let i = 0; i < maxRequests + 10; i++) {
         const response = await request(app.getHttpServer())
@@ -89,9 +87,15 @@ describe('Rate Limiting Verification Tests', () => {
 
       expect(successfulRequests.length).toBeLessThanOrEqual(maxRequests);
       if (rateLimitedRequests.length > 0) {
-        expect(rateLimitedRequests[0].headers['x-ratelimit-limit']).toBeDefined();
-        expect(rateLimitedRequests[0].headers['x-ratelimit-remaining']).toBeDefined();
-        expect(rateLimitedRequests[0].headers['x-ratelimit-reset']).toBeDefined();
+        expect(
+          rateLimitedRequests[0].headers['x-ratelimit-limit'],
+        ).toBeDefined();
+        expect(
+          rateLimitedRequests[0].headers['x-ratelimit-remaining'],
+        ).toBeDefined();
+        expect(
+          rateLimitedRequests[0].headers['x-ratelimit-reset'],
+        ).toBeDefined();
       }
     });
 
@@ -118,19 +122,18 @@ describe('Rate Limiting Verification Tests', () => {
     it('should reset rate limits after time window', async () => {
       const endpoint = '/api/gateway/health';
       const shortTimeWindow = 2000; // 2 seconds for testing
-      
+
       // Make several requests
       const initialRequests = 5;
       for (let i = 0; i < initialRequests; i++) {
-        await request(app.getHttpServer())
-          .get(endpoint);
+        await request(app.getHttpServer()).get(endpoint);
       }
 
       // Get current remaining count
       const response1 = await request(app.getHttpServer())
         .get(endpoint)
         .expect(200);
-      
+
       const remaining1 = parseInt(response1.headers['x-ratelimit-remaining']);
 
       // Wait for rate limit window to reset
@@ -140,7 +143,7 @@ describe('Rate Limiting Verification Tests', () => {
       const response2 = await request(app.getHttpServer())
         .get(endpoint)
         .expect(200);
-      
+
       const remaining2 = parseInt(response2.headers['x-ratelimit-remaining']);
 
       // Remaining count should be reset (higher than before)
@@ -155,33 +158,39 @@ describe('Rate Limiting Verification Tests', () => {
         method: 'GET',
         expectedLimit: 100,
         timeWindow: 60000,
-        description: 'Health endpoint with standard rate limit'
+        description: 'Health endpoint with standard rate limit',
       },
       {
         endpoint: '/api/gateway/metrics',
         method: 'GET',
         expectedLimit: 50,
         timeWindow: 60000,
-        description: 'Metrics endpoint with restricted rate limit'
+        description: 'Metrics endpoint with restricted rate limit',
       },
       {
         endpoint: '/api/dashboard/metrics',
         method: 'GET',
         expectedLimit: 30,
         timeWindow: 60000,
-        description: 'Dashboard metrics with lower rate limit'
-      }
+        description: 'Dashboard metrics with lower rate limit',
+      },
     ];
 
     rateLimitTests.forEach(test => {
       it(`should enforce rate limits for ${test.description}`, async () => {
-        const result = await this.testRateLimit(test);
-        
-        expect(result.successfulRequests).toBeLessThanOrEqual(test.expectedLimit);
-        
+        const result = await testRateLimit(test);
+
+        expect(result.successfulRequests).toBeLessThanOrEqual(
+          test.expectedLimit,
+        );
+
         if (result.rateLimitedRequests > 0) {
-          expect(result.firstRateLimitAt).toBeLessThanOrEqual(test.expectedLimit);
-          expect(result.rateLimitHeaders['x-ratelimit-limit']).toBe(test.expectedLimit.toString());
+          expect(result.firstRateLimitAt).toBeLessThanOrEqual(
+            test.expectedLimit,
+          );
+          expect(result.rateLimitHeaders['x-ratelimit-limit']).toBe(
+            test.expectedLimit.toString(),
+          );
         }
       });
     });
@@ -191,7 +200,7 @@ describe('Rate Limiting Verification Tests', () => {
     it('should rate limit by IP address', async () => {
       const endpoint = '/api/gateway/health';
       const responses: request.Response[] = [];
-      
+
       // Simulate requests from same IP
       for (let i = 0; i < 110; i++) {
         const response = await request(app.getHttpServer())
@@ -208,32 +217,32 @@ describe('Rate Limiting Verification Tests', () => {
       const endpoint = '/api/gateway/health';
       const ip1Responses: request.Response[] = [];
       const ip2Responses: request.Response[] = [];
-      
+
       // Make requests from two different IPs
       const requestPromises = [];
-      
+
       for (let i = 0; i < 50; i++) {
         requestPromises.push(
           request(app.getHttpServer())
             .get(endpoint)
             .set('X-Forwarded-For', '192.168.1.100')
-            .then(res => ip1Responses.push(res))
+            .then(res => ip1Responses.push(res)),
         );
-        
+
         requestPromises.push(
           request(app.getHttpServer())
             .get(endpoint)
             .set('X-Forwarded-For', '192.168.1.101')
-            .then(res => ip2Responses.push(res))
+            .then(res => ip2Responses.push(res)),
         );
       }
-      
+
       await Promise.all(requestPromises);
 
       // Both IPs should be able to make requests independently
       const ip1Success = ip1Responses.filter(r => r.status === 200).length;
       const ip2Success = ip2Responses.filter(r => r.status === 200).length;
-      
+
       expect(ip1Success).toBeGreaterThan(0);
       expect(ip2Success).toBeGreaterThan(0);
     });
@@ -245,10 +254,10 @@ describe('Rate Limiting Verification Tests', () => {
       const endpoint = '/api/dashboard/metrics';
       const user1Token = 'Bearer user1-jwt-token';
       const user2Token = 'Bearer user2-jwt-token';
-      
+
       const user1Responses: request.Response[] = [];
       const user2Responses: request.Response[] = [];
-      
+
       // Make requests as different users
       for (let i = 0; i < 20; i++) {
         try {
@@ -256,7 +265,7 @@ describe('Rate Limiting Verification Tests', () => {
             .get(endpoint)
             .set('Authorization', user1Token);
           user1Responses.push(response1);
-          
+
           const response2 = await request(app.getHttpServer())
             .get(endpoint)
             .set('Authorization', user2Token);
@@ -267,9 +276,13 @@ describe('Rate Limiting Verification Tests', () => {
       }
 
       // Even if auth fails, rate limiting should work independently
-      const user1RateLimited = user1Responses.filter(r => r.status === 429).length;
-      const user2RateLimited = user2Responses.filter(r => r.status === 429).length;
-      
+      const user1RateLimited = user1Responses.filter(
+        r => r.status === 429,
+      ).length;
+      const user2RateLimited = user2Responses.filter(
+        r => r.status === 429,
+      ).length;
+
       // Rate limiting should be independent (both users shouldn't be limited simultaneously due to each other)
       expect(user1RateLimited).toBeLessThan(user1Responses.length);
       expect(user2RateLimited).toBeLessThan(user2Responses.length);
@@ -281,9 +294,9 @@ describe('Rate Limiting Verification Tests', () => {
       // This test assumes there's a whitelist configuration
       const endpoint = '/api/gateway/health';
       const whitelistedIP = '127.0.0.1'; // localhost usually whitelisted
-      
+
       const responses: request.Response[] = [];
-      
+
       // Make many requests from whitelisted IP
       for (let i = 0; i < 150; i++) {
         const response = await request(app.getHttpServer())
@@ -295,7 +308,7 @@ describe('Rate Limiting Verification Tests', () => {
       // Should have fewer rate limited responses from whitelisted IP
       const rateLimited = responses.filter(r => r.status === 429).length;
       const successful = responses.filter(r => r.status === 200).length;
-      
+
       // At least some requests should succeed even if over normal limit
       expect(successful).toBeGreaterThan(100);
     });
@@ -307,56 +320,63 @@ describe('Rate Limiting Verification Tests', () => {
       const concurrentUsers = 10;
       const requestsPerUser = 20;
       const results: LoadTestResult[] = [];
-      
-      const userPromises = Array.from({ length: concurrentUsers }, async (_, userIndex) => {
-        const userIP = `192.168.1.${100 + userIndex}`;
-        const startTime = Date.now();
-        const responses: request.Response[] = [];
-        const responseTimes: number[] = [];
-        
-        for (let i = 0; i < requestsPerUser; i++) {
-          const requestStart = Date.now();
-          
-          try {
-            const response = await request(app.getHttpServer())
-              .get(endpoint)
-              .set('X-Forwarded-For', userIP);
-            
-            const responseTime = Date.now() - requestStart;
-            responseTimes.push(responseTime);
-            responses.push(response);
-          } catch (error) {
-            // Handle network errors
+
+      const userPromises = Array.from(
+        { length: concurrentUsers },
+        async (_, userIndex) => {
+          const userIP = `192.168.1.${100 + userIndex}`;
+          const startTime = Date.now();
+          const responses: request.Response[] = [];
+          const responseTimes: number[] = [];
+
+          for (let i = 0; i < requestsPerUser; i++) {
+            const requestStart = Date.now();
+
+            try {
+              const response = await request(app.getHttpServer())
+                .get(endpoint)
+                .set('X-Forwarded-For', userIP);
+
+              const responseTime = Date.now() - requestStart;
+              responseTimes.push(responseTime);
+              responses.push(response);
+            } catch (error) {
+              // Handle network errors
+            }
           }
-        }
-        
-        const endTime = Date.now();
-        const totalTime = endTime - startTime;
-        
-        return {
-          totalRequests: requestsPerUser,
-          successfulRequests: responses.filter(r => r.status === 200).length,
-          rateLimitedRequests: responses.filter(r => r.status === 429).length,
-          errorRequests: responses.filter(r => r.status >= 500).length,
-          averageResponseTime: responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length,
-          maxResponseTime: Math.max(...responseTimes),
-          minResponseTime: Math.min(...responseTimes),
-          throughput: responses.length / (totalTime / 1000)
-        };
-      });
-      
+
+          const endTime = Date.now();
+          const totalTime = endTime - startTime;
+
+          return {
+            totalRequests: requestsPerUser,
+            successfulRequests: responses.filter(r => r.status === 200).length,
+            rateLimitedRequests: responses.filter(r => r.status === 429).length,
+            errorRequests: responses.filter(r => r.status >= 500).length,
+            averageResponseTime:
+              responseTimes.reduce((sum, time) => sum + time, 0) /
+              responseTimes.length,
+            maxResponseTime: Math.max(...responseTimes),
+            minResponseTime: Math.min(...responseTimes),
+            throughput: responses.length / (totalTime / 1000),
+          };
+        },
+      );
+
       const loadResults = await Promise.all(userPromises);
-      
+
       // Aggregate results
       const aggregated = loadResults.reduce((acc, result) => ({
         totalRequests: acc.totalRequests + result.totalRequests,
         successfulRequests: acc.successfulRequests + result.successfulRequests,
-        rateLimitedRequests: acc.rateLimitedRequests + result.rateLimitedRequests,
+        rateLimitedRequests:
+          acc.rateLimitedRequests + result.rateLimitedRequests,
         errorRequests: acc.errorRequests + result.errorRequests,
-        averageResponseTime: (acc.averageResponseTime + result.averageResponseTime) / 2,
+        averageResponseTime:
+          (acc.averageResponseTime + result.averageResponseTime) / 2,
         maxResponseTime: Math.max(acc.maxResponseTime, result.maxResponseTime),
         minResponseTime: Math.min(acc.minResponseTime, result.minResponseTime),
-        throughput: acc.throughput + result.throughput
+        throughput: acc.throughput + result.throughput,
       }));
 
       // Performance assertions
@@ -364,7 +384,7 @@ describe('Rate Limiting Verification Tests', () => {
       expect(aggregated.maxResponseTime).toBeLessThan(5000); // Less than 5 seconds max
       expect(aggregated.errorRequests).toBe(0); // No server errors
       expect(aggregated.rateLimitedRequests).toBeGreaterThan(0); // Rate limiting should kick in
-      
+
       console.log('Load Test Results:', aggregated);
     });
   });
@@ -372,12 +392,12 @@ describe('Rate Limiting Verification Tests', () => {
   describe('Rate Limit Error Responses', () => {
     it('should return proper error format when rate limited', async () => {
       const endpoint = '/api/gateway/health';
-      
+
       // Exhaust rate limit
       for (let i = 0; i < 105; i++) {
         await request(app.getHttpServer()).get(endpoint);
       }
-      
+
       // Next request should be rate limited
       const response = await request(app.getHttpServer())
         .get(endpoint)
@@ -385,13 +405,13 @@ describe('Rate Limiting Verification Tests', () => {
 
       // Check error response format
       expect(response.body).toBeDefined();
-      if (typeof response.body === 'object') {
+      if (response.body && typeof response.body === 'object') {
         expect(response.body.success).toBe(false);
         expect(response.body.error).toBeDefined();
-        expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
-        expect(response.body.error.message).toContain('rate limit');
+        expect(response.body.error?.code).toBe('RATE_LIMIT_EXCEEDED');
+        expect(response.body.error?.message).toContain('rate limit');
       }
-      
+
       // Check rate limit headers
       expect(response.headers['x-ratelimit-limit']).toBeDefined();
       expect(response.headers['x-ratelimit-remaining']).toBe('0');
@@ -401,12 +421,12 @@ describe('Rate Limiting Verification Tests', () => {
 
     it('should provide accurate retry-after header', async () => {
       const endpoint = '/api/gateway/health';
-      
+
       // Exhaust rate limit
       for (let i = 0; i < 105; i++) {
         await request(app.getHttpServer()).get(endpoint);
       }
-      
+
       const rateLimitedResponse = await request(app.getHttpServer())
         .get(endpoint)
         .expect(429);
@@ -414,13 +434,14 @@ describe('Rate Limiting Verification Tests', () => {
       const retryAfter = parseInt(rateLimitedResponse.headers['retry-after']);
       expect(retryAfter).toBeGreaterThan(0);
       expect(retryAfter).toBeLessThanOrEqual(3600); // Should be reasonable (less than 1 hour)
-      
+
       // Wait for the suggested time and try again
-      await new Promise(resolve => setTimeout(resolve, (retryAfter + 1) * 1000));
-      
-      const retryResponse = await request(app.getHttpServer())
-        .get(endpoint);
-      
+      await new Promise(resolve =>
+        setTimeout(resolve, (retryAfter + 1) * 1000),
+      );
+
+      const retryResponse = await request(app.getHttpServer()).get(endpoint);
+
       expect(retryResponse.status).toBe(200);
     });
   });
@@ -431,7 +452,7 @@ describe('Rate Limiting Verification Tests', () => {
       for (let i = 0; i < 10; i++) {
         await request(app.getHttpServer()).get('/api/gateway/health');
       }
-      
+
       // Check if statistics endpoint exists
       try {
         const statsResponse = await request(app.getHttpServer())
@@ -451,7 +472,7 @@ describe('Rate Limiting Verification Tests', () => {
     it('should handle rate limit configuration updates', async () => {
       // This test checks if rate limits can be updated dynamically
       // In a real implementation, this might involve admin endpoints
-      
+
       try {
         const configResponse = await request(app.getHttpServer())
           .get('/api/gateway/rate-limit-config')
@@ -472,37 +493,36 @@ describe('Rate Limiting Verification Tests', () => {
       const endpoint = '/api/gateway/health';
       const burstSize = 50;
       const responses: request.Response[] = [];
-      
+
       // Send burst of simultaneous requests
       const burstPromises = Array.from({ length: burstSize }, () =>
-        request(app.getHttpServer()).get(endpoint)
+        request(app.getHttpServer()).get(endpoint),
       );
-      
+
       const burstResponses = await Promise.all(burstPromises);
       responses.push(...burstResponses);
-      
+
       // Some requests should succeed, some might be rate limited
       const successful = responses.filter(r => r.status === 200).length;
       const rateLimited = responses.filter(r => r.status === 429).length;
-      
+
       expect(successful + rateLimited).toBe(burstSize);
       expect(successful).toBeGreaterThan(0); // At least some should succeed
     });
 
     it('should handle requests with missing or invalid IP headers', async () => {
       const endpoint = '/api/gateway/health';
-      
+
       // Request without IP header
-      const response1 = await request(app.getHttpServer())
-        .get(endpoint);
+      const response1 = await request(app.getHttpServer()).get(endpoint);
       expect([200, 429]).toContain(response1.status);
-      
+
       // Request with invalid IP header
       const response2 = await request(app.getHttpServer())
         .get(endpoint)
         .set('X-Forwarded-For', 'invalid-ip');
       expect([200, 429]).toContain(response2.status);
-      
+
       // Request with multiple IPs
       const response3 = await request(app.getHttpServer())
         .get(endpoint)
@@ -513,19 +533,19 @@ describe('Rate Limiting Verification Tests', () => {
     it('should handle clock skew and time-based edge cases', async () => {
       // This test would be more relevant with time manipulation libraries
       // For now, just ensure consistent behavior across time boundaries
-      
+
       const endpoint = '/api/gateway/health';
       const responses: request.Response[] = [];
-      
+
       // Make requests near potential time boundaries
       for (let i = 0; i < 5; i++) {
         const response = await request(app.getHttpServer()).get(endpoint);
         responses.push(response);
-        
+
         // Small delay to cross potential time boundaries
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       // All responses should have consistent rate limit headers
       responses.forEach(response => {
         expect(response.headers['x-ratelimit-limit']).toBeDefined();
@@ -535,48 +555,57 @@ describe('Rate Limiting Verification Tests', () => {
     });
   });
 
-  // Helper method to test rate limiting for a specific endpoint
-  private async testRateLimit(test: RateLimitTest): Promise<RateLimitResult> {
+  // Helper function to test rate limiting for a specific endpoint
+  async function testRateLimit(test: RateLimitTest): Promise<RateLimitResult> {
     const responses: request.Response[] = [];
     const responseTimes: number[] = [];
     let firstRateLimitAt: number | null = null;
-    
+
     for (let i = 0; i < test.expectedLimit + 20; i++) {
       const startTime = Date.now();
-      
-      const response = await request(app.getHttpServer())
-        [test.method.toLowerCase()](test.endpoint);
-      
+
+      const response = await request(app.getHttpServer())[
+        test.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete'
+      ](test.endpoint);
+
       const responseTime = Date.now() - startTime;
       responseTimes.push(responseTime);
       responses.push(response);
-      
+
       if (response.status === 429 && firstRateLimitAt === null) {
         firstRateLimitAt = i + 1;
       }
     }
-    
+
     const successfulRequests = responses.filter(r => r.status === 200).length;
     const rateLimitedRequests = responses.filter(r => r.status === 429).length;
-    const averageResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
-    
+    const averageResponseTime =
+      responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+
     const lastRateLimitedResponse = responses.find(r => r.status === 429);
-    const rateLimitHeaders = lastRateLimitedResponse ? {
-      'x-ratelimit-limit': lastRateLimitedResponse.headers['x-ratelimit-limit'] || '',
-      'x-ratelimit-remaining': lastRateLimitedResponse.headers['x-ratelimit-remaining'] || '',
-      'x-ratelimit-reset': lastRateLimitedResponse.headers['x-ratelimit-reset'] || '',
-      'retry-after': lastRateLimitedResponse.headers['retry-after'] || ''
-    } : {};
-    
+    const rateLimitHeaders = lastRateLimitedResponse
+      ? {
+          'x-ratelimit-limit':
+            lastRateLimitedResponse.headers['x-ratelimit-limit'] || '',
+          'x-ratelimit-remaining':
+            lastRateLimitedResponse.headers['x-ratelimit-remaining'] || '',
+          'x-ratelimit-reset':
+            lastRateLimitedResponse.headers['x-ratelimit-reset'] || '',
+          'retry-after': lastRateLimitedResponse.headers['retry-after'] || '',
+        }
+      : {};
+
     return {
       endpoint: test.endpoint,
       requestsMade: responses.length,
       successfulRequests,
       rateLimitedRequests,
       firstRateLimitAt,
-      resetTime: lastRateLimitedResponse ? parseInt(lastRateLimitedResponse.headers['x-ratelimit-reset']) : null,
+      resetTime: lastRateLimitedResponse
+        ? parseInt(lastRateLimitedResponse.headers['x-ratelimit-reset'])
+        : null,
       averageResponseTime,
-      rateLimitHeaders
+      rateLimitHeaders,
     };
   }
 });

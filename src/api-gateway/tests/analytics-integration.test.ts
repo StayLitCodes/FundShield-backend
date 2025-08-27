@@ -157,7 +157,7 @@ describe('AnalyticsIntegrationService', () => {
       averageResponseTime: 150,
       errorRate: 0.02,
       rateLimitHits: 25,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: new Date(),
     });
 
     mockVersioningService.getVersionMeta.mockReturnValue({

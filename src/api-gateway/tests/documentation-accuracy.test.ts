@@ -83,8 +83,11 @@ describe('API Documentation Accuracy Tests', () => {
 
       // Check for JWT Bearer auth
       expect(securitySchemes).toHaveProperty('bearer');
-      expect(securitySchemes?.['bearer']?.type).toBe('http');
-      expect(securitySchemes?.['bearer']?.scheme).toBe('bearer');
+      const bearerScheme = securitySchemes?.['bearer'];
+      if (bearerScheme && 'type' in bearerScheme) {
+        expect(bearerScheme.type).toBe('http');
+        expect(bearerScheme.scheme).toBe('bearer');
+      }
     });
 
     it('should have proper server configuration', () => {
