@@ -408,23 +408,30 @@ export class DashboardService {
     const checks = [
       {
         name: 'Memory Usage',
-        status: this.metrics.realtime.memoryUsage < 80 ? 'pass' : 'fail',
+        status: (this.metrics.realtime.memoryUsage < 80 ? 'pass' : 'fail') as
+          | 'pass'
+          | 'fail',
         message: `${this.metrics.realtime.memoryUsage}%`,
       },
       {
         name: 'CPU Usage',
-        status: this.metrics.realtime.cpuUsage < 80 ? 'pass' : 'fail',
+        status: (this.metrics.realtime.cpuUsage < 80 ? 'pass' : 'fail') as
+          | 'pass'
+          | 'fail',
         message: `${this.metrics.realtime.cpuUsage}%`,
       },
       {
         name: 'Error Rate',
-        status: this.metrics.overview.errorRate < 0.05 ? 'pass' : 'fail',
+        status: (this.metrics.overview.errorRate < 0.05 ? 'pass' : 'fail') as
+          | 'pass'
+          | 'fail',
         message: `${(this.metrics.overview.errorRate * 100).toFixed(2)}%`,
       },
       {
         name: 'Response Time',
-        status:
-          this.metrics.overview.averageResponseTime < 1000 ? 'pass' : 'fail',
+        status: (this.metrics.overview.averageResponseTime < 1000
+          ? 'pass'
+          : 'fail') as 'pass' | 'fail',
         message: `${this.metrics.overview.averageResponseTime}ms`,
       },
     ];

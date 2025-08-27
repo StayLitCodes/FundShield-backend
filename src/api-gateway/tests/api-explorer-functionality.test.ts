@@ -335,12 +335,12 @@ describe('API Explorer Functionality Tests', () => {
 
       for (const endpoint of endpoints) {
         await endpoint.click();
-        await explorerPage.waitForTimeout(300);
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         const tryItOutButton = await explorerPage.$('.try-out__btn');
         if (tryItOutButton) {
           await tryItOutButton.click();
-          await explorerPage.waitForTimeout(300);
+          await new Promise(resolve => setTimeout(resolve, 300));
 
           const requiredParams = await explorerPage.$$(
             '.parameter.required input',
@@ -350,7 +350,7 @@ describe('API Explorer Functionality Tests', () => {
             const executeButton = await explorerPage.$('.execute');
             if (executeButton) {
               await executeButton.click();
-              await explorerPage.waitForTimeout(1000);
+              await new Promise(resolve => setTimeout(resolve, 1000));
 
               // Should show validation error or 400 response
               const responseSection = await explorerPage.$(
@@ -678,7 +678,7 @@ describe('API Explorer Functionality Tests', () => {
               await executeButton.click();
 
               // Should handle error gracefully
-              await explorerPage.waitForTimeout(3000);
+              await new Promise(resolve => setTimeout(resolve, 3000));
 
               const errorMessage = await explorerPage.$(
                 '.live-responses-table .error',
@@ -716,7 +716,7 @@ describe('API Explorer Functionality Tests', () => {
             const executeButton = await explorerPage.$('.execute');
             await executeButton.click();
 
-            await explorerPage.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Should either prevent execution or show error
             const responseSection = await explorerPage.$(

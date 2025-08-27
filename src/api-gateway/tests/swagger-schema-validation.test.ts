@@ -24,6 +24,21 @@ interface SwaggerValidationReport {
   openApiCompliance: boolean;
   securitySchemes: boolean;
   pathsCompliance: boolean;
+  timestamp: Date;
+  document: OpenAPIObject;
+  validation: {
+    totalPaths: number;
+    totalOperations: number;
+    validOperations: number;
+    totalSchemas: number;
+    validSchemas: number;
+  };
+  issues: any[];
+  summary: {
+    isValid: boolean;
+    score: number;
+    recommendations: string[];
+  };
 }
 
 describe('Swagger Schema Validation Tests', () => {
@@ -701,6 +716,15 @@ describe('Swagger Schema Validation Tests', () => {
     }
 
     const report: SwaggerValidationReport = {
+      totalSchemas: Object.keys(swaggerDocument.components?.schemas || {})
+        .length,
+      validSchemas: Object.keys(swaggerDocument.components?.schemas || {})
+        .length,
+      invalidSchemas: 0,
+      validationResults: [],
+      openApiCompliance: true,
+      securitySchemes: true,
+      pathsCompliance: true,
       timestamp: new Date(),
       document: swaggerDocument,
       validation: {

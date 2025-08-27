@@ -11,7 +11,7 @@ import {
   Sse,
   MessageEvent,
 } from '@nestjs/common';
-import { Observable, interval, map } from 'rxjs';
+import { Observable, interval, map, switchMap } from 'rxjs';
 import {
   ApiTags,
   ApiOperation,
@@ -186,21 +186,21 @@ export class DashboardController {
     this.logger.log('Realtime metrics stream started');
 
     return interval(5000).pipe(
-      map(async () => {
+      switchMap(async () => {
         try {
           const metrics = await this.dashboardService.getDashboardMetrics();
           const healthStatus = this.dashboardService.getHealthStatus();
           const alerts = this.dashboardService.getAlerts().slice(0, 5); // Last 5 alerts
 
           return {
-            data: {
+            data: JSON.stringify({
               realtime: metrics.realtime,
               overview: metrics.overview,
               health: healthStatus,
               recentAlerts: alerts.filter(a => !a.acknowledged),
               timestamp: new Date().toISOString(),
               version: process.env.npm_package_version || '1.0.0',
-            },
+            }),
             type: 'metrics-update',
             id: `update-${Date.now()}`,
           } as MessageEvent;
@@ -209,10 +209,10 @@ export class DashboardController {
             `Error generating realtime metrics: ${error.message}`,
           );
           return {
-            data: {
+            data: JSON.stringify({
               error: 'Failed to fetch metrics',
               timestamp: new Date().toISOString(),
-            },
+            }),
             type: 'error',
             id: `error-${Date.now()}`,
           } as MessageEvent;
