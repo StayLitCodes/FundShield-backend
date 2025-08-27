@@ -8,6 +8,14 @@ import { HealthController } from './controllers/health.controller';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { AuthModule } from './auth/auth.module';
 import { CryptoModule } from './crypto/crypto.module';
+import { ApiGatewayModule } from './api-gateway/api-gateway.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { SecurityModule } from './security/security.module';
+import { UserModule } from './user/user.module';
+import { EscrowModule } from './escrow/escrow.module';
+import { NotificationModule } from './notification/notification.module';
+import { DisputeModule } from './dispute/dispute.module';
+import { DevelopersModule } from './developers/developers.module';
 import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
@@ -51,10 +59,18 @@ import { AuditInterceptor } from './audit/audit.interceptor';
     }),
 
     // Modules
+    ApiGatewayModule,
+    AnalyticsModule,
+    SecurityModule,
     BlockchainModule,
     AuditModule,
     AuthModule,
     CryptoModule,
+    UserModule,
+    EscrowModule,
+    NotificationModule,
+    DisputeModule,
+    DevelopersModule,
   ],
   controllers: [HealthController],
   providers: [
