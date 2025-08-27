@@ -14,6 +14,8 @@ import { validationSchema } from './config/validation.config';
 import { AuditModule } from './audit/audit.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
+import { PerformanceInterceptor } from './monitoring/performance.interceptor';
+import { RedisCacheInterceptor } from './monitoring/redis-cache.interceptor';
 
 @Module({
   imports: [
@@ -61,6 +63,14 @@ import { AuditInterceptor } from './audit/audit.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: PerformanceInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RedisCacheInterceptor,
     },
   ],
 })
