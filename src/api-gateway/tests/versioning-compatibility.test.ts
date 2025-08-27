@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../../app.module';
 import { VersioningService } from '../services/versioning.service';
 import { ApiGatewayService } from '../services/api-gateway.service';
-import { ConfigService } from '@nestjs/config';
+
 
 interface VersioningTestCase {
   name: string;

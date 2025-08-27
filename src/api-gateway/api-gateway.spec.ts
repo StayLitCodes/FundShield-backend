@@ -301,7 +301,7 @@ describe('API Gateway', () => {
 
       const mockNext = jest.fn();
 
-      // Test gateway processing
+      // Test gateway processingg
       await gatewayService.processRequest(mockReq, mockRes, mockNext);
 
       // Verify headers were set
@@ -315,7 +315,7 @@ describe('API Gateway', () => {
         expect.any(String),
       );
 
-      // Verify request was processed
+      // Verify request was processedd
       expect(mockNext).toHaveBeenCalled();
       expect(mockReq['apiVersion']).toBe('v1');
     });
@@ -324,7 +324,7 @@ describe('API Gateway', () => {
       const initialMetrics = gatewayService.getMetrics();
       const initialTotal = initialMetrics.totalRequests;
 
-      // Simulate multiple requests
+      // Simulate multiple requestss
       for (let i = 0; i < 5; i++) {
         const mockReq = {
           method: 'GET',

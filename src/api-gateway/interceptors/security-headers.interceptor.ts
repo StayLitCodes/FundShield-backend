@@ -143,7 +143,7 @@ export class SecurityHeadersInterceptor implements NestInterceptor {
 
     response.setHeader('Access-Control-Max-Age', cors.maxAge.toString());
 
-    // Handle preflight requests
+    // Handle preflight requestss
     if (request.method === 'OPTIONS') {
       response.status(204).end();
       return;
