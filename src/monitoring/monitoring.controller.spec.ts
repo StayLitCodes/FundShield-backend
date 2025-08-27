@@ -1,3 +1,60 @@
+  afterEach(() => {
+    metricsService.clearAlerts();
+    metricsService.clearRequests();
+  });
+  it('should filter stats by route', () => {
+    metricsService.recordRequest({
+      route: '/foo',
+      durationMs: 10,
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: process.cpuUsage(),
+    });
+    metricsService.recordRequest({
+      route: '/bar',
+      durationMs: 20,
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: process.cpuUsage(),
+    });
+    const statsFoo = controller.getMetrics('/foo');
+    const statsBar = controller.getMetrics('/bar');
+    expect(statsFoo.total).toBe(1);
+    expect(statsBar.total).toBe(1);
+  });
+
+  it('should return high-memory alert', () => {
+    const fakeMem = { ...process.memoryUsage(), heapUsed: 900 * 1024 * 1024, heapTotal: 1000 * 1024 * 1024 };
+    metricsService.recordRequest({
+      route: '/mem',
+      durationMs: 10,
+      memoryUsage: fakeMem,
+      cpuUsage: process.cpuUsage(),
+    });
+    const alerts = controller.getAlerts(1);
+    expect(alerts.some(a => a.type === 'high-memory')).toBe(true);
+  });
+
+  it('should return high-cpu alert', () => {
+    const fakeCpu = { ...process.cpuUsage(), user: 2e6, system: 0 };
+    metricsService.recordRequest({
+      route: '/cpu',
+      durationMs: 10,
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: fakeCpu,
+    });
+    const alerts = controller.getAlerts(1);
+    expect(alerts.some(a => a.type === 'high-cpu')).toBe(true);
+  });
+
+  it('should clear alerts', () => {
+    metricsService.recordRequest({
+      route: '/slow',
+      durationMs: 2000,
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: process.cpuUsage(),
+    });
+    metricsService.clearAlerts();
+    expect(controller.getAlerts().length).toBe(0);
+  });
 import { Test, TestingModule } from '@nestjs/testing';
 import { MonitoringController } from './monitoring.controller';
 import { PerformanceMetricsService, Alert, RequestMetrics } from './performance-metrics.service';

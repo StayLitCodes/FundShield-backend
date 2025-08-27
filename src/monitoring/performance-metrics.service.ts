@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 
+import { Injectable } from '@nestjs/common';
 
 export interface Alert {
   type: 'slow-request' | 'high-memory' | 'high-cpu' | 'cache-miss';
@@ -20,10 +20,25 @@ export interface RequestMetrics {
 @Injectable()
 export class PerformanceMetricsService {
   private requests: RequestMetrics[] = [];
-
   private alerts: Alert[] = [];
   private cacheHits = 0;
   private cacheMisses = 0;
+
+  clearAlerts() {
+    this.alerts = [];
+  }
+
+  clearRequests() {
+    this.requests = [];
+  }
+
+  getMemoryStats() {
+    return process.memoryUsage();
+  }
+
+  getCpuStats() {
+    return process.cpuUsage();
+  }
 
   recordRequest(metrics: RequestMetrics) {
     this.requests.push(metrics);
