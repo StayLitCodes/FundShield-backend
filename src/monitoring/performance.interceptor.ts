@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { PerformanceMetricsService } from '../services/performance-metrics.service';
+import { PerformanceMetricsService } from './performance-metrics.service';
 
 @Injectable()
 export class PerformanceInterceptor implements NestInterceptor {
