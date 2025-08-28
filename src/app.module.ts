@@ -20,8 +20,11 @@ import { databaseConfig } from './config/database.config';
 import { createLogger } from './config/logger.config';
 import { validationSchema } from './config/validation.config';
 import { AuditModule } from './audit/audit.module';
+import { DatabaseModule } from './database/database.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
+import { PerformanceInterceptor } from './monitoring/performance.interceptor';
+import { RedisCacheInterceptor } from './monitoring/redis-cache.interceptor';
 
 @Module({
   imports: [
@@ -71,12 +74,21 @@ import { AuditInterceptor } from './audit/audit.interceptor';
     NotificationModule,
     DisputeModule,
     DevelopersModule,
+    DatabaseModule,
   ],
   controllers: [HealthController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: PerformanceInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RedisCacheInterceptor,
     },
   ],
 })
